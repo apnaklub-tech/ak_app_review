@@ -5,11 +5,10 @@ import android.app.Activity;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.gms.tasks.Task;
 import com.google.android.play.core.review.ReviewInfo;
 import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
-import com.google.android.play.core.tasks.OnCompleteListener;
-import com.google.android.play.core.tasks.Task;
 
 import java.lang.ref.WeakReference;
 
@@ -87,15 +86,12 @@ public class AppReviewPlugin implements FlutterPlugin, MethodCallHandler, Activi
     }
     ReviewManager manager = ReviewManagerFactory.create(currentActivity.get());
     Task<ReviewInfo> request = manager.requestReviewFlow();
-    request.addOnCompleteListener(new OnCompleteListener<ReviewInfo>() {
-      @Override
-      public void onComplete(@NonNull Task<ReviewInfo> task) {
-        if (task.isSuccessful()) {
-          reviewInfo = task.getResult();
-          result.success("1");
-        } else {
-          result.success("0");
-        }
+    request.addOnCompleteListener(task -> {
+      if (task.isSuccessful()) {
+        reviewInfo = task.getResult();
+        result.success("1");
+      } else {
+        result.success("0");
       }
     });
   }
@@ -111,26 +107,18 @@ public class AppReviewPlugin implements FlutterPlugin, MethodCallHandler, Activi
     }
     ReviewManager manager = ReviewManagerFactory.create(currentActivity.get());
     Task<Void> task = manager.launchReviewFlow(currentActivity.get(), reviewInfo);
-    task.addOnCompleteListener(new OnCompleteListener<Void>() {
-      @Override
-      public void onComplete(@NonNull Task<Void> task) {
-        result.success("Success: " + task.isSuccessful());
-      }
-    });
+    task.addOnCompleteListener(task1 -> result.success("Success: " + task1.isSuccessful()));
   }
 
   private void getReviewInfoAndRequestReview(final Result result) {
     ReviewManager manager = ReviewManagerFactory.create(currentActivity.get());
     Task<ReviewInfo> request = manager.requestReviewFlow();
-    request.addOnCompleteListener(new OnCompleteListener<ReviewInfo>() {
-      @Override
-      public void onComplete(@NonNull Task<ReviewInfo> task) {
-        if (task.isSuccessful()) {
-          reviewInfo = task.getResult();
-          requestReview(result);
-        } else {
-          result.error("Requesting review not possible", null, null);
-        }
+    request.addOnCompleteListener(task -> {
+      if (task.isSuccessful()) {
+        reviewInfo = task.getResult();
+        requestReview(result);
+      } else {
+        result.error("Requesting review not possible", null, null);
       }
     });
   }
